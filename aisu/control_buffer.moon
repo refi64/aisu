@@ -3,7 +3,7 @@ import mode, Buffer from howl
 ControlMode =
   default_config:
     cursor_line_highlighted: false
-    line_wrapping: 'none'
+    line_wrapping: 'character'
     complete: 'manual'
 
   keymap: {}

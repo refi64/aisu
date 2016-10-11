@@ -12,6 +12,7 @@ aisu.setup = ->
 
 bundle_load 'aisu.control_buffer'
 bundle_load 'aisu.commands'
+bundle_load 'aisu.vcs'
 
 aisu.bind = (f, ...) ->
   args = {...}
