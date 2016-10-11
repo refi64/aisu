@@ -18,7 +18,8 @@ class ControlBuffer extends Buffer
     @allow_appends = false
     @prompt_begins = nil
 
-    @_buffer.insert = aisu.bind @\_insert_override, @_buffer\insert
+    @_buffer.insert = aisu.bind @\_aullar_override, @_buffer\insert
+    @_buffer.delete = aisu.bind @\_aullar_override, @_buffer\delete
 
     @force_append 'Aisu Console\n'
     @resume!
@@ -27,12 +28,12 @@ class ControlBuffer extends Buffer
     get: -> false
     set: ->
 
-  _insert_override: (orig_insert, buf, offset, ...) =>
+  _aullar_override: (orig_func, buf, offset, ...) =>
     return if not @allow_appends
     if @prompt_begins
       return unless offset > @prompt_begins
     buf.read_only = false
-    status, err = pcall orig_insert, offset, ...
+    status, err = pcall orig_func, offset, ...
     buf.read_only = true
     error err unless status
 
