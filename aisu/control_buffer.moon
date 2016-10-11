@@ -11,7 +11,7 @@ ControlMode =
 class ControlBuffer extends Buffer
   new: (hook) =>
     super {}
-    @hook = coroutine.create hook
+    @hook = coroutine.create (...) -> @call hook, ...
     @read_only = true
     @title = 'Aisu'
     @mode = mode.by_name 'aisu-control'
@@ -42,6 +42,7 @@ class ControlBuffer extends Buffer
     @mode.keymap.enter = @\close_prompt
 
   close_prompt: =>
+    return if not @prompt_begins
     @allow_appends = false
     text = @sub @prompt_begins+1
     @prompt_begins = nil
@@ -49,7 +50,16 @@ class ControlBuffer extends Buffer
     @resume text
 
   resume: (...) =>
-    coroutine.resume @hook, @, ... if coroutine.status(@hook) != 'dead'
+    if coroutine.status(@hook) != 'dead'
+      @call coroutine.resume, @hook, @, ...
+
+  call: (f, ...) =>
+    errfunc = (err) ->
+      print err
+      @force_append "FATAL ERROR: #{err}\n"
+      @force_append debug.traceback!
+    status, err = xpcall f, errfunc, ...
+    error err if not status
 
   force_append: (...) =>
     allow_appends = @allow_appends

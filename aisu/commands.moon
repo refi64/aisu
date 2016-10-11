@@ -6,4 +6,4 @@ aisu.commands.install_hook = =>
   @force_append 'Enter the name of the package to query: '
   @open_prompt!
   package = yield!
-  print package
+  aisu.read_url package, (msg) -> @force_append "WARNING: #{msg}"
