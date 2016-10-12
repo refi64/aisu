@@ -26,7 +26,7 @@ aisu.get_vcs = (vcs) ->
 
 check_vcs = (vcs) -> try_exec {vcs, '--version'}
 
-is_url = (url) -> url\find('://') and true or false
+is_github_repo = (url) -> url\match'^[^/]+/[^/]+$' and true or false
 
 aisu.init_info = (note = ->) ->
   git = check_vcs('git') or false
@@ -34,7 +34,7 @@ aisu.init_info = (note = ->) ->
   return {:git, :hg}
 
 aisu.read_url = (url, note = ->) ->
-  return is_url(url) and url or "https://github.com/#{url}.git"
+  return is_github_repo(url) and "https://github.com/#{url}.git" or url
 
 aisu.identify_repo = (url) ->
   if try_exec {'git', 'ls-remote', url}
