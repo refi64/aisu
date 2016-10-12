@@ -1,0 +1,11 @@
+init.moon
+aisu/commands.moon
+aisu/control_buffer.moon
+aisu/core.moon
+aisu/vcs.moon
+docs/source/conf.py
+docs/source/index.rst
+README.rst
+!:
+howl.config.indent = 2
+howl.config.strip_trailing_whitespace = true
