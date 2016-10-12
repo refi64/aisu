@@ -44,7 +44,7 @@ aisu.spawn_in_buffer = (buf, args) ->
   args.read_stdout = true
   args.read_stderr = true
   p = howl.io.Process args
-  buf\force_append "Running process '#{p.command_line}'\n"
+  buf\highlighted 'aisu-header', "Running process '#{p.command_line}'\n"
   p\pump add, add
   p
 

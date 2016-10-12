@@ -1,3 +1,4 @@
+import highlight from howl.ui
 import app, mode, Buffer from howl
 
 class ControlCompleter
@@ -20,6 +21,27 @@ ControlMode =
 
   completers: { ControlCompleter, 'in_buffer' }
 
+with highlight
+  .define 'aisu-error',
+    type: .ROUNDED_RECTANGLE
+    background: 'red'
+    background_alpha: 0.5
+
+  .define 'aisu-warning',
+    type: .ROUNDED_RECTANGLE
+    background: 'purple'
+    background_alpha: 0.5
+
+  .define 'aisu-prompt',
+    type: .ROUNDED_RECTANGLE
+    background: 'gray'
+    background_alpha: 0.5
+
+  .define 'aisu-header',
+    type: .ROUNDED_RECTANGLE
+    background: '#043927'
+    background_alpha: 0.5
+
 class ControlBuffer extends Buffer
   new: (hook) =>
     super {}
@@ -33,7 +55,7 @@ class ControlBuffer extends Buffer
     @_buffer.insert = aisu.bind @\_aullar_override, @_buffer\insert
     @_buffer.delete = aisu.bind @\_aullar_override, @_buffer\delete
 
-    @force_append 'Aisu Console\n'
+    @highlighted 'aisu-header', 'Aisu Console\n'
     @resume!
 
   @property modified:
@@ -47,12 +69,21 @@ class ControlBuffer extends Buffer
     buf.read_only = false
     status, err = pcall orig_func, offset, ...
     buf.read_only = true
-    error err unless status
+    if status
+      @update_prompt!
+    else
+      error err
 
   open_prompt: (complete) =>
     @allow_appends = true
     @prompt_begins = @length
     @mode.keymap.enter = @\close_prompt
+    @update_prompt!
+
+  update_prompt: =>
+    return unless @prompt_begins
+    highlight.remove_all 'aisu-prompt', @
+    highlight.apply 'aisu-prompt', @, @prompt_begins, @length-@prompt_begins+1
 
   close_prompt: =>
     return if not @prompt_begins
@@ -61,7 +92,7 @@ class ControlBuffer extends Buffer
     @prompt_begins = nil
     @force_append '\n'
     @mode.config.complete = 'manual'
-    @resume text
+    @resume text.stripped
 
   resume: (...) =>
     if coroutine.status(@hook) != 'dead'
@@ -84,8 +115,14 @@ class ControlBuffer extends Buffer
     app.editor.cursor\eof!
     error err unless result
 
-  warn: (text) => @force_append "WARNING: #{text}\n"
-  error: (text) => @force_append "ERROR: #{text}\n"
+  highlighted: (flair, text) =>
+    pos = @length
+    pos = 1 if pos == 0
+    @force_append text
+    highlight.apply flair, @, pos, @length - pos
+
+  warn: (text) => @highlighted 'aisu-warning', "WARNING: #{text}\n"
+  error: (text) => @highlighted 'aisu-error', "ERROR: #{text}\n"
 
 aisu.ControlBuffer = ControlBuffer
 mode.register
