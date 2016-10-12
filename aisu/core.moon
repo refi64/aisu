@@ -63,3 +63,8 @@ register
   name: 'aisu-uninstall'
   description: 'Uninstall a package'
   handler: aisu.bind control_buffer, aisu.commands.uninstall_hook
+
+register
+  name: 'aisu-update'
+  description: 'Update your packages'
+  handler: aisu.bind control_buffer, aisu.commands.update_hook

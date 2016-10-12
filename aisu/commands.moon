@@ -113,6 +113,33 @@ uninstall_package = (package) =>
   aisu.save_packages!
   @force_append 'Done!\n'
 
+update_package = (package) =>
+  packages = if package == '*'
+    aisu.packages
+  else
+    info = aisu.packages[package]
+    if not info
+      @error 'Invalid package name\n'
+      return
+    require('moon').p info
+    {[package]: info}
+
+  for package, info in pairs packages
+    @force_append "Updating #{package}... "
+    vcs = aisu.get_vcs info.vcs
+    if not vcs
+      @error "Package has invalid VCS: #{info.vcs}"
+      continue
+    orig_id = vcs\revid(info.path).stripped
+    status, err = pcall vcs\update, info.path
+    @error "\nError updating package: #{err}" if not status
+    new_id = vcs\revid(info.path).stripped
+    if orig_id == new_id
+      @force_append "no new changes (at commit #{orig_id})\n"
+    else
+      @force_append "updated from commit #{orig_id} to #{new_id}\n"
+  @force_append 'Done!\n'
+
 aisu.commands.query_hook = =>
   @force_append 'Enter the name of the package to query: '
   @open_prompt!
@@ -140,3 +167,12 @@ aisu.commands.uninstall_hook = =>
   package = yield!
 
   uninstall_package @, package
+
+aisu.commands.update_hook = =>
+  message = 'Enter the name of the package to update, or * for all packages'
+  message ..= ' (press ctrl+space for a list of all installed packages): '
+  @force_append message
+  @open_prompt true
+  package = yield!
+
+  update_package @, package
