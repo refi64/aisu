@@ -4,6 +4,14 @@ aisu.commands = {}
 
 yield = -> select 2, coroutine.yield!
 
+aisu.map_packages = (packages, fn, ...) =>
+  all = [package for package in packages\gmatch '%S+']
+  if #all == 0
+    @writeln 'Aborted.', 'aisu-error'
+  for package in *all
+    @info "Processing package #{package}" if #all != 1
+    fn @, package, ...
+
 aisu.query_info_from_repo = (dir) =>
   aisu_config = loadfile dir / 'aisu.moon'
   status, result = if aisu_config
@@ -168,16 +176,16 @@ aisu.update_package = (package) =>
 aisu.commands.query_hook = =>
   @write 'Enter the name of the package to query: '
   @open_prompt!
-  package = yield!
+  packages = yield!
 
-  aisu.perform_query @, package, aisu.show_query
+  aisu.map_packages @, packages, aisu.perform_query, aisu.show_query
 
 aisu.commands.install_hook = =>
   @write 'Enter the name of the package to install: '
   @open_prompt!
-  package = yield!
+  packages = yield!
 
-  aisu.perform_query @, package, aisu.install_package
+  aisu.map_packages @, packages, aisu.perform_query, aisu.install_package
 
 aisu.commands.list_hook = =>
   @writeln 'List of all packages:', 'aisu-header'
@@ -190,15 +198,15 @@ aisu.commands.uninstall_hook = =>
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
   @open_prompt true
-  package = yield!
+  packages = yield!
 
-  aisu.uninstall_package @, package
+  aisu.map_packages @, packages, aisu.uninstall_package
 
 aisu.commands.update_hook = =>
   message = 'Enter the name of the package to update, or * for all packages'
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
   @open_prompt true
-  package = yield!
+  packages = yield!
 
-  aisu.update_package @, package
+  aisu.map_packages @, packages, aisu.update_package
