@@ -79,7 +79,7 @@ class ControlBuffer extends Buffer
     else
       error err
 
-  open_prompt: (complete) =>
+  open_prompt: =>
     @allow_appends = true
     @prompt_begins = @length
     @mode.keymap.enter = @\close_prompt

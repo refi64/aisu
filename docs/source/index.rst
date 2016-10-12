@@ -151,6 +151,12 @@ The core
 
   Writes the package list to ``~/.howl/aisu.lua``.
 
+- *aisu.yield()*
+
+  Like ``coroutine.yield``, but discards the first return value. Useful for
+  ``ControlBuffer.open_prompt``, since it also returns the buffer, which you
+  probably already have if you were calling ``open_prompt``!
+
 .. _utils:
 
 Utilities
@@ -243,6 +249,18 @@ VCS utilities
 - *aisu.ControlBuffer.error(text)*
 
   Writes an error to the buffer.
+
+- *aisu.ControlBuffer.open_prompt()*
+
+  Opens up a prompt for user input. The result can be obtained by calling
+  ``aisu.yield!``.
+
+- *aisu.ControlBuffer.ask(text, flair)*
+
+  Writes the text followed by a newline with the given flair, followed by
+  opening the prompt. The text will be written until the user enters either
+  ``y`` or ``n``. If ``y`` was entered, ``true`` will be returned; otherwise,
+  ``false`` will be returned.
 
 - *aisu.ControlBuffer.call(f, ...)*
 

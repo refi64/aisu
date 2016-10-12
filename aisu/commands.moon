@@ -219,7 +219,7 @@ aisu.commands.uninstall_hook = =>
   message = 'Enter the name of the package to uninstall'
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
-  @open_prompt true
+  @open_prompt!
   packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.uninstall_package
@@ -228,7 +228,7 @@ aisu.commands.update_hook = =>
   message = 'Enter the name of the package to update, or * for all packages'
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
-  @open_prompt true
+  @open_prompt!
   packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.update_package
