@@ -67,6 +67,7 @@ class ControlBuffer extends Buffer
     @allow_appends = true
     result, err = pcall @append, @, ...
     @allow_appends = allow_appends
+    howl.app.editor.cursor\eof!
     error err unless result
 
 aisu.ControlBuffer = ControlBuffer

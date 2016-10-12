@@ -1,9 +1,12 @@
 import Process from howl.io
 
-class Git
+class Vcs
+  clone: (url, dir) => Process.execute {@name, 'clone', url, dir}
+
+class Git extends Vcs
   name: 'git'
 
-class Mercurial
+class Mercurial extends Vcs
   name: 'hg'
 
 try_exec = (args) ->

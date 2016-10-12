@@ -18,6 +18,14 @@ aisu.bind = (f, ...) ->
   args = {...}
   (...) -> f unpack(args), ...
 
+aisu.with_tmpdir = (f) ->
+  dir = howl.io.File.tmpdir!
+  status, err = pcall f, dir
+  pcall dir\delete_all
+  error err if not status
+
+aisu.upper_first = (s) -> s\gsub '^%l', string.upper
+
 control_buffer = (hook) ->
   buf = aisu.ControlBuffer hook
   editor = howl.app\add_buffer buf
@@ -26,4 +34,4 @@ control_buffer = (hook) ->
 register
   name: 'aisu-query'
   description: 'Query information about a package'
-  handler: aisu.bind control_buffer, aisu.commands.install_hook
+  handler: aisu.bind control_buffer, aisu.commands.query_hook
