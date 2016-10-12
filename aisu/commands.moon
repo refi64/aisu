@@ -174,14 +174,14 @@ aisu.update_package = (package) =>
   @info 'Done!'
 
 aisu.commands.query_hook = =>
-  @write 'Enter the name of the package to query: '
+  @write 'Enter the path/repo of the package to query: '
   @open_prompt!
   packages = yield!
 
   aisu.map_packages @, packages, aisu.perform_query, aisu.show_query
 
 aisu.commands.install_hook = =>
-  @write 'Enter the name of the package to install: '
+  @write 'Enter the path/repo of the package to install: '
   @open_prompt!
   packages = yield!
 
