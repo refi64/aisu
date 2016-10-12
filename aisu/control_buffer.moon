@@ -55,7 +55,7 @@ class ControlBuffer extends Buffer
     @_buffer.insert = aisu.bind @\_aullar_override, @_buffer\insert
     @_buffer.delete = aisu.bind @\_aullar_override, @_buffer\delete
 
-    @highlighted 'aisu-header', 'Aisu Console\n'
+    @writeln 'Aisu Console', 'aisu-header'
     @resume!
 
   @property modified:
@@ -90,7 +90,7 @@ class ControlBuffer extends Buffer
     @allow_appends = false
     text = @sub @prompt_begins+1
     @prompt_begins = nil
-    @force_append '\n'
+    @writeln!
     @mode.config.complete = 'manual'
     @resume text.stripped
 
@@ -100,14 +100,14 @@ class ControlBuffer extends Buffer
 
   call: (f, ...) =>
     errfunc = (err) ->
-      @force_append "FATAL ERROR: #{err}\n"
-      @force_append debug.traceback!
+      @writeln "FATAL ERROR: #{err}", 'aisu-error'
+      @writeln debug.traceback!, 'aisu-error'
     status, err = xpcall f, errfunc, ...
     error err if not status
 
   safe_coroutine: (f) => coroutine.create (...) -> @call f, ...
 
-  force_append: (...) =>
+  _force_append: (...) =>
     allow_appends = @allow_appends
     @allow_appends = true
     result, err = pcall @append, @, ...
@@ -115,14 +115,15 @@ class ControlBuffer extends Buffer
     app.editor.cursor\eof!
     error err unless result
 
-  highlighted: (flair, text) =>
+  write: (text, flair) =>
     pos = @length
     pos = 1 if pos == 0
-    @force_append text
-    highlight.apply flair, @, pos, @length - pos
+    @_force_append text
+    highlight.apply flair, @, pos, @length - pos if flair
 
-  warn: (text) => @highlighted 'aisu-warning', "WARNING: #{text}\n"
-  error: (text) => @highlighted 'aisu-error', "ERROR: #{text}\n"
+  writeln: (text, flair) => @write "#{text or ''}\n", flair
+  warn: (text) => @write "WARNING: #{text}\n", 'aisu-warning'
+  error: (text) => @write "ERROR: #{text}\n", 'aisu-error'
 
 aisu.ControlBuffer = ControlBuffer
 mode.register

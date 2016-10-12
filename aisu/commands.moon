@@ -47,36 +47,36 @@ perform_query = (package, after) =>
 
   url = aisu.read_url package
   if package != url
-    @force_append "Not a URL; assuming it's a GitHub repository at #{url}\n"
+    @writeln "Not a URL; assuming it's a GitHub repository at #{url}"
 
   vcs = aisu.identify_repo url
   if not vcs
     @error 'Invalid repository URL; neither git nor hg could identify it'
     return
   else
-    @force_append "Identified as a #{vcs.name} repo\n"
+    @writeln "Identified as a #{vcs.name} repo"
 
   aisu.with_tmpdir (dir) ->
-    @force_append "Cloning repository to #{dir}... "
+    @write "Cloning repository to #{dir}... "
     vcs\clone url, dir
-    @force_append 'done\n'
-    @force_append 'Querying information from repository...\n'
+    @writeln 'done'
+    @writeln 'Querying information from repository...'
     info = query_info_from_repo @, dir
     after @, url, dir, vcs, info if after
 
 show_query = (url, dir, vcs, info) =>
-  @force_append '\n'
+  @writeln!
   meta = info and info.meta
   categories = {'author', 'description', 'license', 'version'}
   for cat in *categories
-    @force_append "#{aisu.upper cat}: #{meta and meta[cat] or 'unknown'}\n"
+    @writeln "#{aisu.upper cat}: #{meta and meta[cat] or 'unknown'}"
 
 build_package = (build) =>
   return if not build
   if type(build) != 'function'
     @error "Project's build function is actually of type #{type build}"
   else
-    @force_append 'Performing build step for package...\n'
+    @writeln 'Performing build step for package...'
     status, err = pcall build, @
     if not status
       @warn "package build step failed with error: #{err}"
@@ -86,11 +86,13 @@ install_package = (url, dir, vcs, info) =>
   name = File(url).basename\gsub '%.git$', ''
   if aisu.packages[name]
     @warn 'package is already installed!'
-  @force_append '\nPackage information:\n'
+  @writeln!
+  @writeln 'Package information:'
   show_query @, url, dir, vcs, info
   yn = nil
   while yn == nil
-    @force_append '\nDo you wish to install (y/n)? '
+    @writeln!
+    @write 'Do you wish to install (y/n)? '
     @open_prompt!
     ans = yield!
     if ans == 'y'
@@ -98,13 +100,13 @@ install_package = (url, dir, vcs, info) =>
     elseif ans == 'n'
       yn = false
     else
-      @error "Invalid answer: #{ans}\n"
+      @error "Invalid answer: #{ans}"
 
   if yn
     bundles = howl.app.settings.dir / 'bundles'
     bundles\mkdir! if not bundles.exists
     target = bundles / name
-    @force_append "Copying repository to #{target}...\n"
+    @writeln "Copying repository to #{target}..."
     target\delete_all! if target.exists
     cmd = if jit.os == 'Windows'
       {'xcopy', '/e', '/s', '/y'}
@@ -120,19 +122,19 @@ install_package = (url, dir, vcs, info) =>
 
     build_package @, info.build if info
 
-    @force_append 'Done!\n'
+    @writeln 'Done!'
   else
-    @force_append 'Install aborted!\n'
+    @writeln 'Install aborted!', 'aisu-error'
 
 uninstall_package = (package) =>
   info = aisu.packages[package]
   if not info
-    @error 'Invalid package name\n'
+    @error 'Invalid package name'
     return
   pcall File(info.path)\delete_all
   aisu.packages[package] = nil
   aisu.save_packages!
-  @force_append 'Done!\n'
+  @writeln 'Done!'
 
 update_package = (package) =>
   packages = if package == '*'
@@ -140,13 +142,13 @@ update_package = (package) =>
   else
     info = aisu.packages[package]
     if not info
-      @error 'Invalid package name\n'
+      @error 'Invalid package name'
       return
     require('moon').p info
     {[package]: info}
 
   for package, pi in pairs packages
-    @force_append "Updating #{package}... \n"
+    @writeln "Updating #{package}..."
     vcs = aisu.get_vcs pi.vcs
     if not vcs
       @error "Package has invalid VCS: #{pi.vcs}"
@@ -156,36 +158,37 @@ update_package = (package) =>
     @error "updating package: #{err}" if not status
     new_id = vcs\revid(pi.path).stripped
     if orig_id == new_id
-      @force_append "No new changes (at commit #{orig_id})\n"
+      @writeln "No new changes (at commit #{orig_id})"
     else
       info = query_info_from_repo @, File pi.path
       build_package @, info.build if info
-      @force_append "Updated from commit #{orig_id} to #{new_id}\n"
-  @force_append 'Done!\n'
+      @writeln "Updated from commit #{orig_id} to #{new_id}"
+  @writeln 'Done!'
 
 aisu.commands.query_hook = =>
-  @force_append 'Enter the name of the package to query: '
+  @write 'Enter the name of the package to query: '
   @open_prompt!
   package = yield!
 
   perform_query @, package, show_query
 
 aisu.commands.install_hook = =>
-  @force_append 'Enter the name of the package to install: '
+  @write 'Enter the name of the package to install: '
   @open_prompt!
   package = yield!
 
   perform_query @, package, install_package
 
 aisu.commands.list_hook = =>
-  @force_append 'List of all packages:\n\n'
+  @writeln 'List of all packages:'
+  @writeln!
   for name, _ in pairs aisu.packages
-    @force_append "#{name}\n"
+    @writeln "#{name}"
 
 aisu.commands.uninstall_hook = =>
   message = 'Enter the name of the package to uninstall'
   message ..= ' (press ctrl+space for a list of all installed packages): '
-  @force_append message
+  @write message
   @open_prompt true
   package = yield!
 
@@ -194,7 +197,7 @@ aisu.commands.uninstall_hook = =>
 aisu.commands.update_hook = =>
   message = 'Enter the name of the package to update, or * for all packages'
   message ..= ' (press ctrl+space for a list of all installed packages): '
-  @force_append message
+  @write message
   @open_prompt true
   package = yield!
 
