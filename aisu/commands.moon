@@ -1,3 +1,5 @@
+import File, Process from howl.io
+
 aisu.commands = {}
 
 yield = -> select 2, coroutine.yield!
@@ -64,7 +66,7 @@ show_query = (url, dir, vcs, info) =>
     @force_append "#{aisu.upper cat}: #{info and info[cat] or 'unknown'}\n"
 
 install_package = (url, dir, vcs, info) =>
-  name = howl.io.File(url).basename\gsub '%.git$', ''
+  name = File(url).basename\gsub '%.git$', ''
   if aisu.packages[name]
     @warn 'package is already installed!'
   @force_append '\nPackage information:\n'
@@ -92,7 +94,7 @@ install_package = (url, dir, vcs, info) =>
       {'cp', '-R'}
     table.insert cmd, dir
     table.insert cmd, target
-    howl.io.Process.execute cmd
+    Process.execute cmd
     aisu.packages[name] =
       path: tostring target.path
       vcs: vcs.name
@@ -100,6 +102,16 @@ install_package = (url, dir, vcs, info) =>
     @force_append 'Done!\n'
   else
     @force_append 'Install aborted!\n'
+
+uninstall_package = (package) =>
+  info = aisu.packages[package]
+  if not info
+    @error 'Invalid package name\n'
+    return
+  pcall File(info.path)\delete_all
+  aisu.packages[package] = nil
+  aisu.save_packages!
+  @force_append 'Done!\n'
 
 aisu.commands.query_hook = =>
   @force_append 'Enter the name of the package to query: '
@@ -114,3 +126,12 @@ aisu.commands.install_hook = =>
   package = yield!
 
   perform_query @, package, install_package
+
+aisu.commands.uninstall_hook = =>
+  message = 'Enter the name of the package to uninstall'
+  message ..= ' (press ctrl+space for a list of all installed packages): '
+  @force_append message
+  @open_prompt true
+  package = yield!
+
+  uninstall_package @, package

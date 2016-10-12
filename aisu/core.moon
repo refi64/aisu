@@ -53,3 +53,8 @@ register
   name: 'aisu-install'
   description: 'Install a package'
   handler: aisu.bind control_buffer, aisu.commands.install_hook
+
+register
+  name: 'aisu-uninstall'
+  description: 'Uninstall a package'
+  handler: aisu.bind control_buffer, aisu.commands.uninstall_hook

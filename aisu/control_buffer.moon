@@ -1,4 +1,14 @@
-import mode, Buffer from howl
+import app, mode, Buffer from howl
+
+class ControlCompleter
+  complete: (context) =>
+    candidates = {}
+    for name, _ in pairs aisu.packages
+      table.insert candidates, name
+
+    compls = howl.util.Matcher(candidates) context.word_prefix
+    compls.authoritive = true
+    compls
 
 ControlMode =
   default_config:
@@ -7,6 +17,8 @@ ControlMode =
     complete: 'manual'
 
   keymap: {}
+
+  completers: { ControlCompleter, 'in_buffer' }
 
 class ControlBuffer extends Buffer
   new: (hook) =>
@@ -37,7 +49,7 @@ class ControlBuffer extends Buffer
     buf.read_only = true
     error err unless status
 
-  open_prompt: =>
+  open_prompt: (complete) =>
     @allow_appends = true
     @prompt_begins = @length
     @mode.keymap.enter = @\close_prompt
@@ -48,6 +60,7 @@ class ControlBuffer extends Buffer
     text = @sub @prompt_begins+1
     @prompt_begins = nil
     @force_append '\n'
+    @mode.config.complete = 'manual'
     @resume text
 
   resume: (...) =>
@@ -67,7 +80,7 @@ class ControlBuffer extends Buffer
     @allow_appends = true
     result, err = pcall @append, @, ...
     @allow_appends = allow_appends
-    howl.app.editor.cursor\eof!
+    app.editor.cursor\eof!
     error err unless result
 
   warn: (text) => @force_append "WARNING: #{text}\n"
