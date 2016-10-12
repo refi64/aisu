@@ -11,36 +11,38 @@ query_info_from_repo = (dir) =>
 
   if status
     if type(result) != 'table'
-      @force_append "WARNING: aisu.moon returned non-table type #{type result}\n"
+      @warn "aisu.moon returned non-table type #{type result}"
     return result
   else
-    @force_append "WARNING: repository does not contain aisu.moon; trying init.moon\n"
+    @warn "repository does not contain aisu.moon; trying init.moon"
     init = loadfile dir / 'init.moon'
     if init
       status, result = pcall init
       if status
         if type(result.info) != 'table'
-          @force_append "WARNING: init.moon returned non-table type\n"
+          @warn "init.moon returned non-table type"
         else
           return result.info
       else
-        @force_append "WARNING: failed to load init.moon: #{result}\n"
+        @warn "failed to load init.moon: #{result}"
     else
-      @force_append "WARNING: could not locate init.moon\n"
+      @warn "could not locate init.moon"
   nil
 
-aisu.commands.query_hook = =>
-  @force_append 'Enter the name of the package to query: '
-  @open_prompt!
-  package = yield!
+show_query = (dir, info) =>
+  @force_append '\n'
+  categories = {'author', 'description', 'license', 'version'}
+  for cat in *categories
+    @force_append "#{aisu.upper cat}: #{info and info[cat] or 'unknown'}\n"
 
+perform_query = (package, after) =>
   vcs_status = aisu.init_info!
   if not vcs_status.git and not vcs_status.hg
-    @force_append 'You need to have either Git or Hg (preferably both) installed\n'
+    @error 'You need to have either Git or Hg (preferably both) installed'
     return
   for vcs, present in pairs vcs_status
     if not present
-      @force_append "WARNING: #{vcs} isn't installed\n" if not present
+      @warn "#{vcs} isn't installed" if not present
 
   url = aisu.read_url package
   if package != url
@@ -48,7 +50,7 @@ aisu.commands.query_hook = =>
 
   vcs = aisu.identify_repo url
   if not vcs
-    @force_append 'Invalid repository URL; neither git nor hg could identify it\n'
+    @error 'Invalid repository URL; neither git nor hg could identify it'
     return
   else
     @force_append "Identified as a #{vcs.name} repo\n"
@@ -59,8 +61,11 @@ aisu.commands.query_hook = =>
     @force_append 'done\n'
     @force_append 'Querying information from repository...\n'
     info = query_info_from_repo @, dir
+    after @, dir, info if after
 
-    @force_append '\n'
-    categories = {'author', 'description', 'license', 'version'}
-    for cat in *categories
-      @force_append "#{aisu.upper_first cat}: #{info and info[cat] or 'unknown'}\n"
+aisu.commands.query_hook = =>
+  @force_append 'Enter the name of the package to query: '
+  @open_prompt!
+  package = yield!
+
+  perform_query @, package, show_query

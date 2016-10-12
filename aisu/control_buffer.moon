@@ -70,6 +70,9 @@ class ControlBuffer extends Buffer
     howl.app.editor.cursor\eof!
     error err unless result
 
+  warn: (text) => @force_append "WARNING: #{text}\n"
+  error: (text) => @force_append "ERROR: #{text}\n"
+
 aisu.ControlBuffer = ControlBuffer
 mode.register
   name: 'aisu-control'

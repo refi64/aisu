@@ -24,7 +24,7 @@ aisu.with_tmpdir = (f) ->
   pcall dir\delete_all
   error err if not status
 
-aisu.upper_first = (s) -> s\gsub '^%l', string.upper
+aisu.upper = (s) -> s\gsub '^%l', string.upper
 
 control_buffer = (hook) ->
   buf = aisu.ControlBuffer hook
