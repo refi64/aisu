@@ -4,7 +4,7 @@ aisu.commands = {}
 
 yield = -> select 2, coroutine.yield!
 
-query_info_from_repo = (dir) =>
+aisu.query_info_from_repo = (dir) =>
   aisu_config = loadfile dir / 'aisu.moon'
   status, result = if aisu_config
     pcall aisu_config
@@ -36,8 +36,8 @@ query_info_from_repo = (dir) =>
       @warn "could not locate init.moon"
   nil
 
-perform_query = (package, after) =>
-  vcs_status = aisu.init_info!
+aisu.perform_query = (package, after) =>
+  vcs_status = aisu.vcs_info!
   if not vcs_status.git and not vcs_status.hg
     @error 'You need to have either Git or Hg (preferably both) installed'
     return
@@ -61,17 +61,17 @@ perform_query = (package, after) =>
     vcs\clone url, dir
     @writeln 'done'
     @writeln 'Querying information from repository...'
-    info = query_info_from_repo @, dir
+    info = aisu.query_info_from_repo @, dir
     after @, url, dir, vcs, info if after
 
-show_query = (url, dir, vcs, info) =>
+aisu.show_query = (url, dir, vcs, info) =>
   @writeln!
   meta = info and info.meta
   categories = {'author', 'description', 'license', 'version'}
   for cat in *categories
     @writeln "#{aisu.upper cat}: #{meta and meta[cat] or 'unknown'}"
 
-build_package = (build) =>
+aisu.build_package = (build) =>
   return if not build
   if type(build) != 'function'
     @error "Project's build function is actually of type #{type build}"
@@ -82,13 +82,13 @@ build_package = (build) =>
       @warn "package build step failed with error: #{err}"
       @warn 'package may be left in a broken state!'
 
-install_package = (url, dir, vcs, info) =>
+aisu.install_package = (url, dir, vcs, info) =>
   name = File(url).basename\gsub '%.git$', ''
   if aisu.packages[name]
     @warn 'package is already installed!'
   @writeln!
   @writeln 'Package information:'
-  show_query @, url, dir, vcs, info
+  aisu.show_query @, url, dir, vcs, info
   yn = nil
   while yn == nil
     @writeln!
@@ -120,13 +120,13 @@ install_package = (url, dir, vcs, info) =>
       vcs: vcs.name
     aisu.save_packages!
 
-    build_package @, info.build if info
+    aisu.build_package @, info.build if info
 
     @writeln 'Done!'
   else
     @writeln 'Install aborted!', 'aisu-error'
 
-uninstall_package = (package) =>
+aisu.uninstall_package = (package) =>
   info = aisu.packages[package]
   if not info
     @error 'Invalid package name'
@@ -136,7 +136,7 @@ uninstall_package = (package) =>
   aisu.save_packages!
   @writeln 'Done!'
 
-update_package = (package) =>
+aisu.update_package = (package) =>
   packages = if package == '*'
     aisu.packages
   else
@@ -160,8 +160,8 @@ update_package = (package) =>
     if orig_id == new_id
       @writeln "No new changes (at commit #{orig_id})"
     else
-      info = query_info_from_repo @, File pi.path
-      build_package @, info.build if info
+      info = aisu.query_info_from_repo @, File pi.path
+      aisu.build_package @, info.build if info
       @writeln "Updated from commit #{orig_id} to #{new_id}"
   @writeln 'Done!'
 
@@ -170,14 +170,14 @@ aisu.commands.query_hook = =>
   @open_prompt!
   package = yield!
 
-  perform_query @, package, show_query
+  aisu.perform_query @, package, aisu.show_query
 
 aisu.commands.install_hook = =>
   @write 'Enter the name of the package to install: '
   @open_prompt!
   package = yield!
 
-  perform_query @, package, install_package
+  aisu.perform_query @, package, aisu.install_package
 
 aisu.commands.list_hook = =>
   @writeln 'List of all packages:'
@@ -192,7 +192,7 @@ aisu.commands.uninstall_hook = =>
   @open_prompt true
   package = yield!
 
-  uninstall_package @, package
+  aisu.uninstall_package @, package
 
 aisu.commands.update_hook = =>
   message = 'Enter the name of the package to update, or * for all packages'
@@ -201,4 +201,4 @@ aisu.commands.update_hook = =>
   @open_prompt true
   package = yield!
 
-  update_package @, package
+  aisu.update_package @, package

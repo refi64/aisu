@@ -14,6 +14,10 @@ class Mercurial extends Vcs
   update: (dir) => @exec {'hg', 'pull', '-u'}, dir
   revid: (dir) => @exec {'hg', 'id', '-i'}, dir
 
+aisu.Vcs = Vcs
+aisu.Git = Git
+aisu.Mercurial = Mercurial
+
 try_exec = (args) ->
   status, stdout, stderr, p = pcall Process.execute, args
   return status and p.successful
@@ -28,12 +32,12 @@ check_vcs = (vcs) -> try_exec {vcs, '--version'}
 
 is_github_repo = (url) -> url\match'^[^/]+/[^/]+$' and true or false
 
-aisu.init_info = (note = ->) ->
+aisu.vcs_info = ->
   git = check_vcs('git') or false
   hg = check_vcs('hg') or false
   return {:git, :hg}
 
-aisu.read_url = (url, note = ->) ->
+aisu.read_url = (url) ->
   return is_github_repo(url) and "https://github.com/#{url}.git" or url
 
 aisu.identify_repo = (url) ->
