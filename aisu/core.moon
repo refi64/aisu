@@ -39,6 +39,15 @@ aisu.with_tmpdir = (f) ->
 
 aisu.upper = (s) -> s\gsub '^%l', string.upper
 
+aisu.spawn_in_buffer = (buf, args) ->
+  add = (data) -> buf\force_append data or ''
+  args.read_stdout = true
+  args.read_stderr = true
+  p = howl.io.Process args
+  buf\force_append "Running process '#{p.command_line}'\n"
+  p\pump add, add
+  p
+
 control_buffer = (hook) ->
   buf = aisu.ControlBuffer hook
   editor = howl.app\add_buffer buf

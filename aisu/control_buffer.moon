@@ -23,7 +23,7 @@ ControlMode =
 class ControlBuffer extends Buffer
   new: (hook) =>
     super {}
-    @hook = coroutine.create (...) -> @call hook, ...
+    @hook = @safe_coroutine hook
     @read_only = true
     @title = 'Aisu'
     @mode = mode.by_name 'aisu-control'
@@ -69,11 +69,12 @@ class ControlBuffer extends Buffer
 
   call: (f, ...) =>
     errfunc = (err) ->
-      print err
       @force_append "FATAL ERROR: #{err}\n"
       @force_append debug.traceback!
     status, err = xpcall f, errfunc, ...
     error err if not status
+
+  safe_coroutine: (f) => coroutine.create (...) -> @call f, ...
 
   force_append: (...) =>
     allow_appends = @allow_appends

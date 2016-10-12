@@ -6,17 +6,22 @@ yield = -> select 2, coroutine.yield!
 
 query_info_from_repo = (dir) =>
   aisu_config = loadfile dir / 'aisu.moon'
-  if aisu_config
-    status, result = pcall aisu_config
+  status, result = if aisu_config
+    pcall aisu_config
   else
-    status = false
+    false
 
   if status
     if type(result) != 'table'
       @warn "aisu.moon returned non-table type #{type result}"
     return result
   else
-    @warn "repository does not contain aisu.moon; trying init.moon"
+    msg = if result
+      "aisu.moon failed with error: #{result}"
+    else
+      "repository does not contain aisu.moon"
+    msg ..= "; trying init.moon"
+    @warn msg
     init = loadfile dir / 'init.moon'
     if init
       status, result = pcall init
@@ -24,7 +29,7 @@ query_info_from_repo = (dir) =>
         if type(result.info) != 'table'
           @warn "init.moon returned non-table type"
         else
-          return result.info
+          return meta: result.info
       else
         @warn "failed to load init.moon: #{result}"
     else
@@ -61,9 +66,21 @@ perform_query = (package, after) =>
 
 show_query = (url, dir, vcs, info) =>
   @force_append '\n'
+  meta = info and info.meta
   categories = {'author', 'description', 'license', 'version'}
   for cat in *categories
-    @force_append "#{aisu.upper cat}: #{info and info[cat] or 'unknown'}\n"
+    @force_append "#{aisu.upper cat}: #{meta and meta[cat] or 'unknown'}\n"
+
+build_package = (build) =>
+  return if not build
+  if type(build) != 'function'
+    @error "Project's build function is actually of type #{type build}"
+  else
+    @force_append 'Performing build step for package...\n'
+    status, err = pcall build, @
+    if not status
+      @warn "package build step failed with error: #{err}"
+      @warn 'package may be left in a broken state!'
 
 install_package = (url, dir, vcs, info) =>
   name = File(url).basename\gsub '%.git$', ''
@@ -82,6 +99,7 @@ install_package = (url, dir, vcs, info) =>
       yn = false
     else
       @error "Invalid answer: #{ans}\n"
+
   if yn
     bundles = howl.app.settings.dir / 'bundles'
     bundles\mkdir! if not bundles.exists
@@ -99,6 +117,9 @@ install_package = (url, dir, vcs, info) =>
       path: tostring target.path
       vcs: vcs.name
     aisu.save_packages!
+
+    build_package @, info.build if info
+
     @force_append 'Done!\n'
   else
     @force_append 'Install aborted!\n'
@@ -124,20 +145,22 @@ update_package = (package) =>
     require('moon').p info
     {[package]: info}
 
-  for package, info in pairs packages
-    @force_append "Updating #{package}... "
-    vcs = aisu.get_vcs info.vcs
+  for package, pi in pairs packages
+    @force_append "Updating #{package}... \n"
+    vcs = aisu.get_vcs pi.vcs
     if not vcs
-      @error "Package has invalid VCS: #{info.vcs}"
+      @error "Package has invalid VCS: #{pi.vcs}"
       continue
-    orig_id = vcs\revid(info.path).stripped
-    status, err = pcall vcs\update, info.path
-    @error "\nError updating package: #{err}" if not status
-    new_id = vcs\revid(info.path).stripped
+    orig_id = vcs\revid(pi.path).stripped
+    status, err = pcall vcs\update, pi.path
+    @error "updating package: #{err}" if not status
+    new_id = vcs\revid(pi.path).stripped
     if orig_id == new_id
-      @force_append "no new changes (at commit #{orig_id})\n"
+      @force_append "No new changes (at commit #{orig_id})\n"
     else
-      @force_append "updated from commit #{orig_id} to #{new_id}\n"
+      info = query_info_from_repo @, File pi.path
+      build_package @, info.build if info
+      @force_append "Updated from commit #{orig_id} to #{new_id}\n"
   @force_append 'Done!\n'
 
 aisu.commands.query_hook = =>
