@@ -42,6 +42,11 @@ with highlight
     background: '#043927'
     background_alpha: 0.5
 
+  .define 'aisu-info'
+    type: .ROUNDED_RECTANGLE
+    background: '#7ec0ee'
+    background_alpha: 0.5
+
 class ControlBuffer extends Buffer
   new: (hook) =>
     super {}
@@ -122,8 +127,9 @@ class ControlBuffer extends Buffer
     highlight.apply flair, @, pos, @length - pos if flair
 
   writeln: (text, flair) => @write "#{text or ''}\n", flair
-  warn: (text) => @write "WARNING: #{text}\n", 'aisu-warning'
-  error: (text) => @write "ERROR: #{text}\n", 'aisu-error'
+  info: (text) => @writeln text, 'aisu-info'
+  warn: (text) => @writeln "WARNING: #{text}", 'aisu-warning'
+  error: (text) => @writeln "ERROR: #{text}", 'aisu-error'
 
 aisu.ControlBuffer = ControlBuffer
 mode.register

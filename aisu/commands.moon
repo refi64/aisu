@@ -47,14 +47,14 @@ aisu.perform_query = (package, after) =>
 
   url = aisu.read_url package
   if package != url
-    @writeln "Not a URL; assuming it's a GitHub repository at #{url}"
+    @info "Not a URL; assuming it's a GitHub repository at #{url}"
 
   vcs = aisu.identify_repo url
   if not vcs
     @error 'Invalid repository URL; neither git nor hg could identify it'
     return
   else
-    @writeln "Identified as a #{vcs.name} repo"
+    @info "Identified as a #{vcs.name} repo"
 
   aisu.with_tmpdir (dir) ->
     @write "Cloning repository to #{dir}... "
@@ -87,7 +87,7 @@ aisu.install_package = (url, dir, vcs, info) =>
   if aisu.packages[name]
     @warn 'package is already installed!'
   @writeln!
-  @writeln 'Package information:'
+  @writeln 'Package information:', 'aisu-header'
   aisu.show_query @, url, dir, vcs, info
   yn = nil
   while yn == nil
@@ -122,7 +122,7 @@ aisu.install_package = (url, dir, vcs, info) =>
 
     aisu.build_package @, info.build if info
 
-    @writeln 'Done!'
+    @info 'Done!'
   else
     @writeln 'Install aborted!', 'aisu-error'
 
@@ -134,7 +134,7 @@ aisu.uninstall_package = (package) =>
   pcall File(info.path)\delete_all
   aisu.packages[package] = nil
   aisu.save_packages!
-  @writeln 'Done!'
+  @info 'Done!'
 
 aisu.update_package = (package) =>
   packages = if package == '*'
@@ -158,12 +158,12 @@ aisu.update_package = (package) =>
     @error "updating package: #{err}" if not status
     new_id = vcs\revid(pi.path).stripped
     if orig_id == new_id
-      @writeln "No new changes (at commit #{orig_id})"
+      @info "No new changes (at commit #{orig_id})"
     else
       info = aisu.query_info_from_repo @, File pi.path
       aisu.build_package @, info.build if info
-      @writeln "Updated from commit #{orig_id} to #{new_id}"
-  @writeln 'Done!'
+      @info "Updated from commit #{orig_id} to #{new_id}"
+  @info 'Done!'
 
 aisu.commands.query_hook = =>
   @write 'Enter the name of the package to query: '
@@ -180,7 +180,7 @@ aisu.commands.install_hook = =>
   aisu.perform_query @, package, aisu.install_package
 
 aisu.commands.list_hook = =>
-  @writeln 'List of all packages:'
+  @writeln 'List of all packages:', 'aisu-header'
   @writeln!
   for name, _ in pairs aisu.packages
     @writeln "#{name}"
