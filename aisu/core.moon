@@ -7,8 +7,21 @@ aisu.packages = {}
 
 aisu.setup = ->
   unless aisu.packages_file.exists
-    aisu.packages_file\open 'w', (fh) -> fh\write 'return {}'
-  aisu.packages = dofile aisu.packages_file.path
+    aisu.packages_file\open 'w', (fh) -> fh\write 'return {}\n'
+  status, result = pcall dofile, aisu.packages_file.path
+  aisu.packages = status and result or {}
+
+aisu.save_packages = ->
+  aisu.packages_file\open 'w', (fh) ->
+    write_k = (k) -> fh\write "['#{k}'] = "
+
+    fh\write 'return {\n'
+    for name, info in pairs aisu.packages
+      fh\write "  ['#{name}'] = {\n"
+      for k, v in pairs info
+        fh\write "    ['#{k}'] = '#{v}',\n"
+      fh\write '  },\n'
+    fh\write '}\n'
 
 bundle_load 'aisu.control_buffer'
 bundle_load 'aisu.commands'
