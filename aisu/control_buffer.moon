@@ -131,6 +131,20 @@ class ControlBuffer extends Buffer
   warn: (text) => @writeln "WARNING: #{text}", 'aisu-warning'
   error: (text) => @writeln "ERROR: #{text}", 'aisu-error'
 
+  ask: (text, flair) =>
+    yn = nil
+    while yn == nil
+      @write text, flair
+      @open_prompt!
+      ans = aisu.yield!
+      if ans == 'y'
+        yn = true
+      elseif ans == 'n'
+        yn = false
+      else
+        @error "Invalid answer: #{ans}"
+    return yn
+
 aisu.ControlBuffer = ControlBuffer
 mode.register
   name: 'aisu-control'

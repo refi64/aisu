@@ -1,8 +1,7 @@
 import File, Process from howl.io
+parse = require 'moonscript.parse'
 
 aisu.commands = {}
-
-yield = -> select 2, coroutine.yield!
 
 aisu.map_packages = (packages, fn, ...) =>
   all = [package for package in packages\gmatch '%S+']
@@ -11,6 +10,42 @@ aisu.map_packages = (packages, fn, ...) =>
   for package in *all
     @info "Processing package #{package}" if #all != 1
     fn @, package, ...
+
+read_init = (init) =>
+  @info "Attempting to parse #{init}..."
+  tree = parse.string init\read '*all'
+  if tree
+    res = {}
+    last = tree[#tree]
+    if last[1] == 'table'
+      for rkv in *last[2]
+        key, value = unpack rkv
+        if key[1] == 'key_literal' and key[2] == 'info' and value[1] == 'table'
+          -- { info: ... }
+          for mkv in *value[2]
+            meta, data = unpack mkv
+            if meta[1] == 'key_literal' and data[1] == 'string'
+              res[meta[2]] = data[3]
+    return res if next(res) != nil
+
+  @warn "bundle init file #{init} could not be parsed as MoonScript."
+  msg = 'Aisu can try running the file, but it might change your editor as '
+  msg ..= 'if the package was already installed!'
+  @writeln msg, 'aisu-warning'
+  if @ask 'Do you want to try anyway (y/n)? ', 'aisu-warning'
+    init_f = loadfile init
+    if init_f
+      status, result = pcall init_f
+      if status
+        if type(result.info) != 'table'
+          @warn "#{init} returned non-table type"
+        else
+          return result.info
+      else
+        @warn "failed to run #{init}: #{result}"
+    else
+      @warn "failed to load #{init}"
+  nil
 
 aisu.query_info_from_repo = (dir) =>
   aisu_config = loadfile dir / 'aisu.moon'
@@ -28,21 +63,21 @@ aisu.query_info_from_repo = (dir) =>
       "aisu.moon failed with error: #{result}"
     else
       "repository does not contain aisu.moon"
-    msg ..= "; trying init.moon"
+    msg ..= "; trying init.moon and init.lua"
     @warn msg
-    init = loadfile dir / 'init.moon'
-    if init
-      status, result = pcall init
-      if status
-        if type(result.info) != 'table'
-          @warn "init.moon returned non-table type"
-        else
-          return meta: result.info
-      else
-        @warn "failed to load init.moon: #{result}"
+    init_moon = dir/'init.moon'
+    init_lua = dir/'init.lua'
+    local meta
+    if init_moon.exists
+      meta = read_init @, init_moon
+    elseif init_lua.exists
+      meta = read_init @, init_lua
     else
-      @warn "could not locate init.moon"
-  nil
+      @warn 'could not locate init.moon or init.lua'
+    if meta
+      return :meta
+    else
+      return nil
 
 aisu.perform_query = (package, after) =>
   vcs_status = aisu.vcs_info!
@@ -97,20 +132,8 @@ aisu.install_package = (url, dir, vcs, info) =>
   @writeln!
   @writeln 'Package information:', 'aisu-header'
   aisu.show_query @, url, dir, vcs, info
-  yn = nil
-  while yn == nil
-    @writeln!
-    @write 'Do you wish to install (y/n)? '
-    @open_prompt!
-    ans = yield!
-    if ans == 'y'
-      yn = true
-    elseif ans == 'n'
-      yn = false
-    else
-      @error "Invalid answer: #{ans}"
 
-  if yn
+  if @ask 'Do Do you wish to install (y/n)? '
     bundles = howl.app.settings.dir / 'bundles'
     bundles\mkdir! if not bundles.exists
     target = bundles / name
@@ -152,7 +175,6 @@ aisu.update_package = (package) =>
     if not info
       @error 'Invalid package name'
       return
-    require('moon').p info
     {[package]: info}
 
   for package, pi in pairs packages
@@ -176,14 +198,14 @@ aisu.update_package = (package) =>
 aisu.commands.query_hook = =>
   @write 'Enter the path/repo of the package to query: '
   @open_prompt!
-  packages = yield!
+  packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.perform_query, aisu.show_query
 
 aisu.commands.install_hook = =>
   @write 'Enter the path/repo of the package to install: '
   @open_prompt!
-  packages = yield!
+  packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.perform_query, aisu.install_package
 
@@ -198,7 +220,7 @@ aisu.commands.uninstall_hook = =>
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
   @open_prompt true
-  packages = yield!
+  packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.uninstall_package
 
@@ -207,6 +229,6 @@ aisu.commands.update_hook = =>
   message ..= ' (press ctrl+space for a list of all installed packages): '
   @write message
   @open_prompt true
-  packages = yield!
+  packages = aisu.yield!
 
   aisu.map_packages @, packages, aisu.update_package

@@ -39,6 +39,8 @@ aisu.with_tmpdir = (f) ->
 
 aisu.upper = (s) -> s\gsub '^%l', string.upper
 
+aisu.yield = -> select 2, coroutine.yield!
+
 aisu.spawn_in_buffer = (buf, args) ->
   add = (data) -> buf\write data or ''
   args.read_stdout = true
