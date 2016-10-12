@@ -35,3 +35,8 @@ register
   name: 'aisu-query'
   description: 'Query information about a package'
   handler: aisu.bind control_buffer, aisu.commands.query_hook
+
+register
+  name: 'aisu-install'
+  description: 'Install a package'
+  handler: aisu.bind control_buffer, aisu.commands.install_hook
