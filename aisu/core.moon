@@ -55,6 +55,11 @@ register
   handler: aisu.bind control_buffer, aisu.commands.install_hook
 
 register
+  name: 'aisu-list'
+  description: 'List all installed packages'
+  handler: aisu.bind control_buffer, aisu.commands.list_hook
+
+register
   name: 'aisu-uninstall'
   description: 'Uninstall a package'
   handler: aisu.bind control_buffer, aisu.commands.uninstall_hook

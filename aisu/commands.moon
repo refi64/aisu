@@ -127,6 +127,11 @@ aisu.commands.install_hook = =>
 
   perform_query @, package, install_package
 
+aisu.commands.list_hook = =>
+  @force_append 'List of all packages:\n\n'
+  for name, _ in pairs aisu.packages
+    @force_append "#{name}\n"
+
 aisu.commands.uninstall_hook = =>
   message = 'Enter the name of the package to uninstall'
   message ..= ' (press ctrl+space for a list of all installed packages): '
