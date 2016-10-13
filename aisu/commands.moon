@@ -133,7 +133,7 @@ aisu.install_package = (url, dir, vcs, info) =>
   @writeln 'Package information:', 'aisu-header'
   aisu.show_query @, url, dir, vcs, info
 
-  if @ask 'Do Do you wish to install (y/n)? '
+  if @ask 'Do you wish to install (y/n)? '
     bundles = howl.app.settings.dir / 'bundles'
     bundles\mkdir! if not bundles.exists
     target = bundles / name
