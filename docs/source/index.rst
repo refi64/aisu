@@ -12,7 +12,7 @@ Installing Aisu
 
 Ironically enough, you can't use Aisu to install itself (yet!) like most package
 managers. Instead, you have to do things the old-fashioned way::
-   
+
   $ mkdir ~/.howl/bundles
   $ cd ~/.howl/bundles
   $ git clone https://github.com/kirbyfan64/aisu.git
@@ -75,7 +75,7 @@ By default, Aisu looks for a file called ``aisu.moon``. It looks kind of like
 this:
 
 .. code-block:: moonscript
-   
+
   {
     meta:
       author: 'Author name here'
@@ -96,18 +96,61 @@ ControlBuffer_ and is supposed to setup anything required for the package to
 function correctly. An example is:
 
 .. code-block:: moonscript
-   
+
   build: (buffer, dir) ->
     -- Run make. dir is the directory holding the package.
     aisu.spawn_in_buffer buffer,
       cmd: {'make'}
       working_directory: dir
-    
+
+A full example of an ``aisu.moon`` can be seen in the ``howl-autoclang`` bundle:
+
+.. code-block:: moonscript
+
+  {
+    -- Metadata
+    meta:
+      author: 'Ryan Gonzalez'
+      description: 'Clang-based autocompletion for C/C++'
+      license: 'MIT'
+      version: '0.1'
+
+    -- The build function: runs each command.
+    build: (buf, dir) ->
+      cmds = {
+        {'git', 'submodule', 'init'}
+        {'git', 'submodule', 'update'}
+        {'make', '-C', 'ljclang', 'libljclang.so'}
+      }
+      for cmd in *cmds
+        aisu.spawn_in_buffer buf,
+          :cmd
+          working_directory: dir
+  }
+
+Reducing duplication
+^^^^^^^^^^^^^^^^^^^^
+
+If you haven't noticed, ``aisu.moon`` 's ``meta`` field is largely the same as
+``init.moon`` 's ``info``. Since that's a bit of a chore to maintain, you can
+just do this in ``init.moon``:
+
+.. code-block:: moonscript
+
+  -- ... normal code here ...
+  {
+    -- The magic is here:
+    info: bundle_load('aisu').meta
+    -- ...
+  }
+
+This just loads up ``aisu.moon`` and grabs the ``meta`` field.
+
 FAQ
 ***
 
 Since Aisu is new, there haven't really been any questions asked yet, so this
-mostly came off the top of my head. Which explains why it makes almost no 
+mostly came off the top of my head. Which explains why it makes almost no
 sense...
 
 Does Aisu have dependency management?
@@ -304,19 +347,19 @@ Commands
 
   Writes the package information to the buffer. Designed to be called by
   ``aisu.perform_query``.
-  
+
 - *aisu.build_package(buffer, build_function, dir)*
 
   Calls the given build function. ``dir`` is the directory holding the package.
-  
+
 - *aisu.show_query(buffer, url, dir, vcs, info)*
 
   Installs the given package. Designed to be called by ``aisu.perform_query``.
-  
+
 - *aisu.uninstall_package(package)*
 
   Uninstalls the given package.
-  
+
 - *aisu.update_package(package)*
 
   Uninstalls the given package.
