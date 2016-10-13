@@ -48,21 +48,33 @@ read_init = (init) =>
   nil
 
 aisu.query_info_from_repo = (dir) =>
-  aisu_config = loadfile dir / 'aisu.moon'
+  aisu_moon = dir/'aisu.moon'
+  aisu_lua = dir/'aisu.lua'
+  aisu_file = if aisu_moon.exists
+    aisu_moon
+  elseif aisu_lua.exists
+    aisu_lua
+  else
+    nil
+  aisu_config, result = if aisu_file
+    loadfile aisu_file
+  else
+    nil
+
   status, result = if aisu_config
     pcall aisu_config
   else
-    false
+    false, result
 
   if status
     if type(result) != 'table'
-      @warn "aisu.moon returned non-table type #{type result}"
+      @warn "#{aisu_file} returned non-table type #{type result}"
     return result
   else
     msg = if result
-      "aisu.moon failed with error: #{result}"
+      "#{aisu_file} failed with error: #{result}"
     else
-      "repository does not contain aisu.moon"
+      "repository does not contain aisu.moon or aisu.lua"
     msg ..= "; trying init.moon and init.lua"
     @warn msg
     init_moon = dir/'init.moon'

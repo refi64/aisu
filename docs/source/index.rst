@@ -81,15 +81,34 @@ this:
       author: 'Author name here'
       description: 'Description here'
       license: 'License here'
+      version: 'Version here'
     build: (buffer) ->
       -- This function will be run whenever the package is installed/updated.
   }
 
 Any of the fields can be ommited.
 
-If ``aisu.moon`` is not present, Aisu will attempt to gather package metadata
-from ``init.moon``. Failing that, it bails and assumes all the metadata is
-unknown.
+You can also use Lua with ``aisu.lua``, like this:
+
+.. code-block:: lua
+
+  return {
+    meta = {
+      author = 'Author name here',
+      description = 'Description here',
+      license = 'License here',
+      version = 'Version here'
+    },
+
+    build = function (buffer)
+      -- This function will be run whenever the package is installed/updated.
+    end
+  }
+
+If neither ``aisu.moon`` nor ``aisu.lua`` is present, Aisu will attempt to
+parse ``init.moon`` to find the metadata. If that also fails, then Aisu will
+ask you if it can run ``init.moon`` or ``init.lua`` to get the metadata.
+Failing that, it bails and assumes all the metadata is unknown.
 
 The most interesting part here is the ``build`` function. It is passed the Aisu
 ControlBuffer_ and is supposed to setup anything required for the package to
