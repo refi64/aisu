@@ -97,8 +97,11 @@ function correctly. An example is:
 
 .. code-block:: moonscript
    
-  build: (buffer) ->
-    aisu.spawn_in_buffer(buffer, {'make'}) -- Run make.
+  build: (buffer, dir) ->
+    -- Run make. dir is the directory holding the package.
+    aisu.spawn_in_buffer buffer,
+      cmd: {'make'}
+      working_directory: dir
     
 FAQ
 ***
@@ -302,9 +305,9 @@ Commands
   Writes the package information to the buffer. Designed to be called by
   ``aisu.perform_query``.
   
-- *aisu.build_package(buffer, build_function)*
+- *aisu.build_package(buffer, build_function, dir)*
 
-  Calls the given build function.
+  Calls the given build function. ``dir`` is the directory holding the package.
   
 - *aisu.show_query(buffer, url, dir, vcs, info)*
 

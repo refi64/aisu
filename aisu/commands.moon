@@ -114,13 +114,13 @@ aisu.show_query = (url, dir, vcs, info) =>
   for cat in *categories
     @writeln "#{aisu.upper cat}: #{meta and meta[cat] or 'unknown'}"
 
-aisu.build_package = (build) =>
+aisu.build_package = (build, dir) =>
   return if not build
   if type(build) != 'function'
     @error "Project's build function is actually of type #{type build}"
   else
     @writeln 'Performing build step for package...'
-    status, err = pcall build, @
+    status, err = pcall build, @, dir
     if not status
       @warn "package build step failed with error: #{err}"
       @warn 'package may be left in a broken state!'
@@ -151,7 +151,7 @@ aisu.install_package = (url, dir, vcs, info) =>
       vcs: vcs.name
     aisu.save_packages!
 
-    aisu.build_package @, info.build if info
+    aisu.build_package @, info.build, dir if info
 
     @info 'Done!'
   else
@@ -191,7 +191,7 @@ aisu.update_package = (package) =>
       @info "No new changes (at commit #{orig_id})"
     else
       info = aisu.query_info_from_repo @, File pi.path
-      aisu.build_package @, info.build if info
+      aisu.build_package @, info.build, dir if info
       @info "Updated from commit #{orig_id} to #{new_id}"
   @info 'Done!'
 
