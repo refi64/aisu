@@ -151,7 +151,7 @@ aisu.install_package = (url, dir, vcs, info) =>
       vcs: vcs.name
     aisu.save_packages!
 
-    aisu.build_package @, info.build, dir if info
+    aisu.build_package @, info.build, target if info
 
     @info 'Done!'
   else
