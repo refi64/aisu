@@ -359,8 +359,8 @@ Commands
 - *aisu.perform_query(buffer, package, after)*
 
   Queries for information on the given package. After the query is complete,
-  calls **after(buffer, package_url, temporary_directory_holding_repo,
-  version_control_class, package_information_like_query_info_from_repo)**.
+  calls *after(buffer, package_url, temporary_directory_holding_repo,
+  version_control_class, package_information_like_query_info_from_repo)*.
 
 - *aisu.show_query(buffer, url, dir, vcs, info)*
 
