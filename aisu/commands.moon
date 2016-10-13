@@ -47,6 +47,26 @@ read_init = (init) =>
       @warn "failed to load #{init}"
   nil
 
+-- Copied from lib/howl/bundle.moon.
+module_name = (name) -> name\lower!\gsub '[%s%p]+', '_'
+
+unload_package = (name) =>
+  if _G.bundles[module_name name]
+    @writeln 'Unloading package...'
+    result, err = pcall howl.bundle.unload, name
+    if not result
+      @warn "error unloading package: #{err}"
+
+load_package = (name) =>
+  before = _G.bundles[module_name name] != nil
+  unload_package @, name
+  @writeln "#{before and 'Re-l' or 'L'}oading package..."
+  result, err = pcall howl.bundle.load_by_name, name
+  if not result
+    msg = "error loading package: #{err}; "
+    msg ..= 'you should restart Howl for any changes to take effect'
+    @warn msg
+
 aisu.query_info_from_repo = (dir) =>
   aisu_moon = dir/'aisu.moon'
   aisu_lua = dir/'aisu.lua'
@@ -164,6 +184,7 @@ aisu.install_package = (url, dir, vcs, info) =>
     aisu.save_packages!
 
     aisu.build_package @, info.build, target if info
+    load_package @, name
 
     @info 'Done!'
   else
@@ -174,6 +195,8 @@ aisu.uninstall_package = (package) =>
   if not info
     @error 'Invalid package name'
     return
+  unload_package @, package
+  @writeln 'Deleting files...'
   pcall File(info.path)\delete_all
   aisu.packages[package] = nil
   aisu.save_packages!
@@ -205,6 +228,7 @@ aisu.update_package = (package) =>
       info = aisu.query_info_from_repo @, File pi.path
       aisu.build_package @, info.build, dir if info
       @info "Updated from commit #{orig_id} to #{new_id}"
+    load_package @, package
   @info 'Done!'
 
 aisu.commands.query_hook = =>
