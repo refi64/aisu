@@ -381,4 +381,4 @@ Commands
 
 - *aisu.update_package(package)*
 
-  Uninstalls the given package.
+  Updates the given package.
