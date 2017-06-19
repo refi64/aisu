@@ -1,5 +1,6 @@
 import highlight from howl.ui
 import app, mode, Buffer from howl
+moon = require 'moon'
 
 class ControlCompleter
   complete: (context) =>
@@ -63,9 +64,17 @@ class ControlBuffer extends Buffer
     @writeln 'Aisu Console', 'aisu-header'
     @resume!
 
-  @property modified:
-    get: -> false
-    set: ->
+    -- Workaround for https://github.com/howl-editor/howl/issues/363
+    meta = getmetatable @
+    meta.__properties = moon.copy Buffer.__properties
+    meta.__properties.modified =
+      get: -> false
+      set: ->
+
+  -- https://github.com/howl-editor/howl/issues/363
+  -- @property modified:
+    -- get: -> false
+    -- set: ->
 
   _aullar_override: (orig_func, buf, offset, ...) =>
     return if not @allow_appends
